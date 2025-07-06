@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Adiciona a biblioteca de ícones Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container admin-panel">
+        <header>
+            <h1>Painel de Controle</h1>
+            <p>Gerencie os links e a aparência do seu site.</p>
+        </header>
+
+        <main>
+            <!-- Seção de Gerenciamento de Links -->
+            <section class="admin-section">
+                <h2>Gerenciar Links</h2>
+                <form id="add-link-form" class="admin-form">
+                    <input type="text" id="link-text" placeholder="Texto do botão (ex: 🏡 Casa e Decoração)" required>
+                    <input type="text" id="link-url" placeholder="Cole o link aqui (URL, vídeo, etc.)" required>
+                    <input type="text" id="link-icon" placeholder="Classe do ícone (opcional, ex: fa-solid fa-house)">
+                    <input type="text" id="link-section" placeholder="Nome da Seção (opcional)">
+                    <input type="date" id="link-expiration" title="Data de validade (opcional)">
+                    <button type="submit">Adicionar Link</button>
+                </form>
+                <h3>Links Atuais:</h3>
+                <div id="current-links-list">
+                    <!-- Links serão inseridos aqui pelo JavaScript -->
+                </div>
+            </section>
+
+            <!-- Seção de Gerenciamento de Seções -->
+            <section class="admin-section">
+                <h2>Gerenciar Seções</h2>
+                <p class="admin-hint">Adicione uma descrição opcional para cada seção. Elas aparecerão abaixo do título na página principal.</p>
+                <div id="section-editor-list">
+                    <!-- O editor de seções será inserido aqui pelo JavaScript -->
+                </div>
+                <button id="save-sections-btn" class="save-descriptions-btn">Salvar Descrições</button>
+            </section>
+
+            <!-- Seção de Compartilhamento -->
+            <section class="admin-section">
+                <h2>Compartilhar Site</h2>
+                <p class="admin-hint">Use o link abaixo para divulgar sua página para seus clientes nas redes sociais.</p>
+                <div class="share-container">
+                    <input type="text" id="share-link-input" readonly title="Link da sua loja">
+                    <button id="copy-link-btn" class="admin-form-button" title="Copiar Link"><i class="fas fa-copy"></i></button>
+                </div>
+                <div class="social-share-buttons">
+                    <a href="#" id="share-whatsapp" class="social-btn whatsapp" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                    <a href="#" id="share-telegram" class="social-btn telegram" target="_blank"><i class="fab fa-telegram"></i> Telegram</a>
+                </div>
+            </section>
+
+            <!-- Seção de Personalização -->
+            <section class="admin-section">
+                <h2>Personalizar Aparência</h2>
+                <form id="theme-form" class="admin-form">
+                    <div class="form-grid">
+                        <div class="full-width">
+                            <label for="store-name">Nome da Loja:</label>
+                            <input type="text" id="store-name" placeholder="Achadinhos da...">
+                        </div>
+                        <div class="full-width">
+                            <label for="store-subtitle">Subtítulo da Loja:</label>
+                            <input type="text" id="store-subtitle" placeholder="As melhores ofertas para você...">
+                        </div>
+                        <div class="full-width">
+                            <label for="profile-pic-input">Foto de Perfil (do dispositivo):</label>
+                            <input type="file" id="profile-pic-input" accept="image/*">
+                            <img src="sua-foto.jpg" alt="Prévia da foto de perfil" id="profile-pic-preview" class="profile-pic-preview">
+                        </div>
+                        <div>
+                            <label for="bg-image">URL da Imagem de Fundo (opcional):</label>
+                            <input type="url" id="bg-image" placeholder="https://...">
+                        </div>
+                        <div class="full-width">
+                            <label for="bg-image-input">Imagem de Fundo (do dispositivo):</label>
+                            <input type="file" id="bg-image-input" accept="image/*">
+                            <div class="bg-preview-wrapper">
+                                <img src="" alt="Prévia do fundo" id="bg-image-preview" class="bg-image-preview">
+                                <button type="button" id="remove-bg-image-btn" class="remove-image-btn">Remover Imagem de Fundo</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="bg-color1">Cor do Fundo (início do gradiente):</label>
+                            <input type="color" id="bg-color1" value="#f5f7fa">
+                        </div>
+                        <div>
+                            <label for="bg-color2">Cor do Fundo (fim do gradiente):</label>
+                            <input type="color" id="bg-color2" value="#c3cfe2">
+                        </div>
+                        <div>
+                            <label for="button-color">Cor dos Botões:</label>
+                            <input type="color" id="button-color" value="#ff6600">
+                        </div>
+                        <div>
+                            <label for="font-family">Fonte do Site:</label>
+                            <select id="font-family">
+                                <option value="'Poppins', sans-serif">Poppins</option>
+                                <option value="'Roboto', sans-serif">Roboto</option>
+                                <option value="'Montserrat', sans-serif">Montserrat</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit">Salvar Aparência</button>
+                </form>
+            </section>
+        </main>
+
+        <footer>
+            <a href="index.html" class="back-to-site">← Voltar para o site</a>
+        </footer>
+    </div>
+
+    <!-- Biblioteca para reordenação com 'arrastar e soltar' -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

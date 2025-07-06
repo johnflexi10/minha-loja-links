@@ -1,0 +1,634 @@
+/* ==========================================================================
+   1. CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
+   ========================================================================== */
+
+:root {
+    /* Cores e Fontes */
+    --font-family: 'Poppins', sans-serif;
+    --button-bg-color: #ff6600;
+    --profile-border-color: #ff6600;
+    --text-color-primary: #222;
+    --text-color-secondary: #666;
+
+    /* Fundo do Site */
+    --bg-image: none;
+    --bg-gradient: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+
+    /* Cores do Admin */
+    --admin-success-color: #28a745;
+    --admin-info-color: #007bff;
+    --admin-danger-color: #dc3545;
+    --admin-light-bg: #f8f9fa;
+}
+
+/* ==========================================================================
+   2. ESTILOS DE BASE E LAYOUT
+   ========================================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-family);
+}
+
+body {
+    background-image: var(--bg-image), var(--bg-gradient);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Impede que o fundo role com a página */
+    color: var(--text-color-primary);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Alinha no topo para páginas longas */
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 680px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.95); /* Leve transparência */
+    backdrop-filter: blur(5px); /* Efeito de vidro fosco */
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   3. PÁGINA PÚBLICA (INDEX.HTML)
+   ========================================================================== */
+
+/* --- Cabeçalho --- */
+header {
+    margin-bottom: 30px;
+}
+
+.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--profile-border-color);
+    object-fit: cover;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color-primary);
+}
+
+header p {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    margin-top: 5px;
+}
+
+/* --- Seções de Links --- */
+.link-section {
+    margin-bottom: 30px;
+}
+
+.link-section h2 {
+    font-size: 1.2rem;
+    color: var(--text-color-primary);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.link-section .section-description {
+    font-size: 0.95rem;
+    color: var(--text-color-secondary);
+    margin-top: -10px; /* Aproxima a descrição do título */
+    margin-bottom: 20px;
+}
+
+/* --- Botões de Link --- */
+.link-button {
+    position: relative; /* Necessário para o efeito de bolhas */
+    overflow: hidden;   /* Impede que as bolhas vazem */
+    z-index: 1;         /* Garante que o conteúdo fique acima do efeito */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Espaço entre o ícone e o texto */
+    background-color: var(--button-bg-color);
+    color: #ffffff;
+    text-decoration: none;
+    padding: 18px;
+    margin: 10px 0;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    opacity: 0; /* Começa invisível para a animação */
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.link-button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.link-button:active {
+    transform: scale(0.98);
+}
+
+/* --- Animação de Entrada --- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Efeito de Bolhas (Hover) --- */
+.link-button:before,
+.link-button:after {
+  position: absolute;
+  content: "";
+  width: 150%;
+  left: 50%;
+  height: 100%;
+  transform: translateX(-50%);
+  z-index: -1; /* Fica atrás do texto do botão */
+  background-repeat: no-repeat;
+}
+
+.link-button:hover:before {
+  top: -70%;
+  background-image: radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, transparent 20%, var(--button-bg-color) 20%, transparent 30%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, transparent 10%, var(--button-bg-color) 15%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%);
+  background-size: 10% 10%, 20% 20%, 15% 15%, 20% 20%, 18% 18%, 10% 10%, 15% 15%,
+    10% 10%, 18% 18%;
+  background-position: 50% 120%;
+  animation: topBubbles 0.6s ease;
+}
+
+.link-button:hover::after {
+  bottom: -70%;
+  background-image: radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, transparent 10%, var(--button-bg-color) 15%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%),
+    radial-gradient(circle, var(--button-bg-color) 20%, transparent 20%);
+  background-size: 15% 15%, 20% 20%, 18% 18%, 20% 20%, 15% 15%, 20% 20%, 18% 18%;
+  background-position: 50% 0%;
+  animation: bottomBubbles 0.6s ease;
+}
+
+@keyframes topBubbles {
+  0% {
+    background-position: 5% 90%, 10% 90%, 10% 90%, 15% 90%, 25% 90%, 25% 90%,
+      40% 90%, 55% 90%, 70% 90%;
+  }
+  50% {
+    background-position: 0% 80%, 0% 20%, 10% 40%, 20% 0%, 30% 30%, 22% 50%,
+      50% 50%, 65% 20%, 90% 30%;
+  }
+  100% {
+    background-position: 0% 70%, 0% 10%, 10% 30%, 20% -10%, 30% 20%, 22% 40%,
+      50% 40%, 65% 10%, 90% 20%;
+    background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+  }
+}
+
+@keyframes bottomBubbles {
+  0% {
+    background-position: 10% -10%, 30% 10%, 55% -10%, 70% -10%, 85% -10%,
+      70% -10%, 70% 0%;
+  }
+  50% {
+    background-position: 0% 80%, 20% 80%, 45% 60%, 60% 100%, 75% 70%, 95% 60%,
+      105% 0%;
+  }
+  100% {
+    background-position: 0% 90%, 20% 90%, 45% 70%, 60% 110%, 75% 80%, 95% 70%,
+      110% 10%;
+    background-size: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+  }
+}
+
+/* --- Rodapé --- */
+footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+footer p {
+    font-size: 0.8rem;
+    color: #999;
+    line-height: 1.5;
+    position: relative;
+}
+
+#admin-trigger {
+    color: #ccc; /* Ícone cinza claro */
+    text-decoration: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    transition: color 0.2s ease;
+}
+
+#admin-trigger:hover {
+    color: var(--text-color-primary);
+}
+
+/* ==========================================================================
+   4. PAINEL DE ADMINISTRAÇÃO (ADMIN.HTML)
+   ========================================================================== */
+
+/* --- Layout Geral do Admin --- */
+.admin-panel {
+    text-align: left;
+}
+
+.admin-section {
+    background-color: var(--admin-light-bg);
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.admin-section h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: var(--text-color-primary);
+}
+
+.admin-hint {
+    font-size: 0.9rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 20px;
+    text-align: center;
+    padding: 0 10px;
+}
+
+.section-editor-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.section-editor-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-editor-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.section-editor-content label {
+    font-weight: bold;
+}
+
+/* --- Formulários do Admin --- */
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.admin-form input[type="text"],
+.admin-form input[type="url"],
+.admin-form input[type="date"],
+.admin-form select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.admin-form button {
+    padding: 12px;
+    background-color: var(--admin-success-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* Renomeado para ser mais genérico e reutilizável */
+.admin-form-button {
+    background-color: var(--admin-success-color);
+}
+
+.save-descriptions-btn {
+    margin-top: 10px;
+    width: 100%;
+    background-color: var(--admin-info-color);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* --- Componentes do Admin --- */
+.profile-pic-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+    margin-top: 10px;
+    display: block;
+}
+
+.bg-preview-wrapper {
+    position: relative;
+    margin-top: 10px;
+}
+
+.bg-image-preview {
+    width: 100%;
+    height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #ddd;
+    display: none;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(220, 53, 69, 0.9);
+    padding: 5px 10px;
+    display: none;
+}
+
+.admin-link-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.admin-link-item span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.click-counter {
+    margin-left: auto; /* Empurra para a direita */
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.admin-section-tag {
+    background-color: var(--admin-info-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+}
+
+.day-schedule-tag {
+    background-color: #17a2b8;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.expiration-date {
+    background-color: #fdf2e8;
+    color: #fd7e14;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.expiration-date.expired {
+    background-color: #fbecec;
+    color: var(--admin-danger-color);
+    text-decoration: line-through;
+}
+
+.drag-handle {
+    cursor: grab;
+    color: #aaa;
+    margin-right: 10px;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: #cde4ff;
+}
+
+.delete-btn {
+    background-color: var(--admin-danger-color);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.day-selector {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.day-selector-label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: var(--text-color-secondary);
+}
+
+.day-options {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.day-options input[type="checkbox"] {
+    display: none; /* Esconde o checkbox real */
+}
+
+.day-options label {
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.day-options input[type="checkbox"]:checked + label {
+    background-color: var(--admin-info-color);
+    color: white;
+    border-color: var(--admin-info-color);
+}
+
+.back-to-site {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* --- Seção de Compartilhamento --- */
+.share-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#share-link-input {
+    flex-grow: 1;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    color: #495057;
+    cursor: text;
+}
+
+#copy-link-btn {
+    flex-shrink: 0;
+    background-color: var(--admin-info-color);
+    padding: 0 15px;
+}
+
+.social-share-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.social-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: opacity 0.2s ease;
+}
+
+.social-btn:hover { opacity: 0.9; }
+.social-btn.whatsapp { background-color: #25D366; }
+.social-btn.telegram { background-color: #0088cc; }
+
+/* ==========================================================================
+   5. RESPONSIVIDADE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    /* --- Ajustes Gerais --- */
+    .container {
+        padding: 20px;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .profile-pic {
+        width: 100px;
+        height: 100px;
+    }
+
+    .link-button {
+        padding: 16px;
+        font-size: 1rem;
+    }
+
+    /* --- Ajustes do Painel de Admin --- */
+    .admin-section {
+        padding: 15px;
+    }
+
+    .admin-link-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .admin-link-item span {
+        flex-wrap: wrap; /* Permite que os 'badges' quebrem a linha */
+        width: 100%;
+    }
+
+    .click-counter {
+        margin-left: 0;
+        margin-top: 8px;
+    }
+
+    .delete-btn {
+        width: 100%;
+        margin-top: 5px;
+        text-align: center;
+    }
+
+    .section-editor-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
