@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initPublicPage() {
     loadTheme();
     renderPublicLinks();
+    renderSocialLinks(); // Renderiza os ícones sociais no rodapé
 
     const adminTrigger = document.getElementById('admin-trigger');
     if (adminTrigger) {
@@ -38,6 +39,25 @@ function initPublicPage() {
         mainContainer.addEventListener('click', (e) => {
             const linkButton = e.target.closest('.link-button');
             if (linkButton && linkButton.dataset.index) {
+                // --- INÍCIO DA LÓGICA DA ANIMAÇÃO DE CLIQUE (RIPPLE) ---
+                const rect = linkButton.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                const diameter = Math.max(linkButton.clientWidth, linkButton.clientHeight);
+                const radius = diameter / 2;
+
+                ripple.style.width = ripple.style.height = `${diameter}px`;
+                ripple.style.left = `${e.clientX - rect.left - radius}px`;
+                ripple.style.top = `${e.clientY - rect.top - radius}px`;
+                ripple.classList.add('ripple');
+                
+                linkButton.appendChild(ripple);
+
+                // Remove o elemento da ondulação após a animação terminar
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600); // Duração da animação em CSS (0.6s)
+                // --- FIM DA LÓGICA DA ANIMAÇÃO ---
+
                 const index = parseInt(linkButton.dataset.index, 10);
                 const links = getFromStorage('links', []);
                 // Incrementa o contador de cliques para o link específico
@@ -118,9 +138,13 @@ function renderPublicLinks() {
         let sectionHtml = `<section class="link-section"><h2>${sectionName}</h2>${descriptionHtml}`;
         
         sectionLinks.forEach((link, animationIndex) => {
-            const iconHtml = link.icon ? `<i class="${link.icon}"></i>` : '';
+            // Prioriza o ícone manual, senão tenta detectar um ícone automático pela URL
+            const finalIconClass = link.icon || getIconForUrl(link.url);
+            const iconHtml = finalIconClass ? `<i class="${finalIconClass}"></i>` : '';
+
             // O atraso da animação é baseado na posição dentro da seção
             const animationDelay = animationIndex * 0.1;
+
             // O data-index agora aponta para o índice original no array de links
             sectionHtml += `<a href="${link.url}" data-index="${link.originalIndex}" target="_blank" class="link-button" style="animation-delay: ${animationDelay}s;">${iconHtml} ${link.text}</a>`;
         });
@@ -128,6 +152,56 @@ function renderPublicLinks() {
         sectionHtml += '</section>';
         mainContainer.innerHTML += sectionHtml;
     });
+}
+
+/**
+ * Retorna uma classe de ícone Font Awesome com base na URL do link.
+ * @param {string} url - A URL a ser verificada.
+ * @returns {string|null} A classe do ícone ou null se nenhum for encontrado.
+ */
+function getIconForUrl(url) {
+    if (!url) return null;
+    if (url.includes('shopee.com')) return 'fa-solid fa-bag-shopping'; // Ícone genérico para Shopee
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'fab fa-youtube';
+    if (url.includes('wa.me') || url.includes('whatsapp.com')) return 'fab fa-whatsapp';
+    if (url.includes('instagram.com')) return 'fab fa-instagram';
+    if (url.includes('tiktok.com')) return 'fab fa-tiktok';
+    if (url.includes('facebook.com')) return 'fab fa-facebook';
+    if (url.includes('t.me') || url.includes('telegram.org')) return 'fab fa-telegram';
+    if (url.includes('twitter.com') || url.includes('x.com')) return 'fab fa-twitter';
+    return null; // Retorna nulo se nenhum domínio correspondente for encontrado
+}
+
+/**
+ * Renderiza os links das redes sociais no rodapé da página pública.
+ */
+function renderSocialLinks() {
+    const socialLinks = getFromStorage('social_links', {});
+    const container = document.getElementById('social-links-footer');
+    if (!container) return;
+
+    let html = '';
+
+    if (socialLinks.instagram) {
+        html += `<a href="https://instagram.com/${socialLinks.instagram}" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>`;
+    }
+    if (socialLinks.tiktok) {
+        // Garante que o @ está no link, mas não duplica se o usuário já digitou
+        const tiktokUser = socialLinks.tiktok.startsWith('@') ? socialLinks.tiktok : `@${socialLinks.tiktok}`;
+        html += `<a href="https://tiktok.com/${tiktokUser}" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>`;
+    }
+    if (socialLinks.facebook) {
+        html += `<a href="${socialLinks.facebook}" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>`;
+    }
+    if (socialLinks.whatsapp) {
+        // Remove caracteres não numéricos para criar o link do WhatsApp
+        const whatsappNumber = socialLinks.whatsapp.replace(/\D/g, '');
+        if (whatsappNumber) {
+            html += `<a href="https://wa.me/55${whatsappNumber}" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+        }
+    }
+
+    container.innerHTML = html;
 }
 
 // =================================================================
@@ -148,6 +222,7 @@ function initAdminPage() {
     const addLinkForm = document.getElementById('add-link-form');
     addLinkForm.addEventListener('submit', (e) => {
         e.preventDefault();
+        const editIndex = document.getElementById('edit-link-index').value;
         const text = document.getElementById('link-text').value;
         const url = document.getElementById('link-url').value;
         const icon = document.getElementById('link-icon').value;
@@ -159,12 +234,22 @@ function initAdminPage() {
         });
 
         const links = getFromStorage('links', []);
-        links.push({ text, url, section: section || 'Categorias', icon, clicks: 0, expiration: expiration || null, scheduledDays: scheduledDays.length > 0 ? scheduledDays : null });
+        const newLinkData = { text, url, section: section || 'Categorias', icon, expiration: expiration || null, scheduledDays: scheduledDays.length > 0 ? scheduledDays : null };
+
+        if (editIndex !== '') {
+            // Modo de Edição: atualiza o link existente
+            const originalClicks = links[editIndex].clicks || 0;
+            links[editIndex] = { ...newLinkData, clicks: originalClicks }; // Mantém a contagem de cliques
+        } else {
+            // Modo de Adição: adiciona um novo link
+            links.push({ ...newLinkData, clicks: 0 });
+        }
+
         saveToStorage('links', links);
 
-        renderAdminLinkList();
-        renderSectionEditor(); // Atualiza o editor de seções também
-        e.target.reset();
+        resetFormState(); // Reseta o formulário e o estado de edição
+        renderAdminLinkList(); // Atualiza a lista de links
+        renderSectionEditor(); // Atualiza o editor de seções
     });
 
     // Formulário de tema
@@ -214,6 +299,29 @@ function initAdminPage() {
         saveToStorage('section_details', sectionDetails);
         alert('Descrições das seções salvas com sucesso!');
     });
+
+    // --- Lógica do Formulário de Redes Sociais ---
+    const socialLinksForm = document.getElementById('social-links-form');
+    if (socialLinksForm) {
+        // Carregar dados salvos
+        const savedSocialLinks = getFromStorage('social_links', {});
+        document.getElementById('social-instagram').value = savedSocialLinks.instagram || '';
+        document.getElementById('social-tiktok').value = savedSocialLinks.tiktok || '';
+        document.getElementById('social-facebook').value = savedSocialLinks.facebook || '';
+        document.getElementById('social-whatsapp').value = savedSocialLinks.whatsapp || '';
+
+        socialLinksForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const socialLinks = {
+                instagram: document.getElementById('social-instagram').value.trim(),
+                tiktok: document.getElementById('social-tiktok').value.trim(),
+                facebook: document.getElementById('social-facebook').value.trim(),
+                whatsapp: document.getElementById('social-whatsapp').value.trim(),
+            };
+            saveToStorage('social_links', socialLinks);
+            alert('Links das redes sociais salvos com sucesso!');
+        });
+    }
 
     // --- Lógica de Upload de Imagens ---
 
@@ -282,8 +390,53 @@ function initAdminPage() {
                 renderAdminLinkList();
                 renderSectionEditor();
             }
+        } else if (e.target.matches('.edit-btn')) {
+            const indexToEdit = parseInt(e.target.dataset.index, 10);
+            const currentLinks = getFromStorage('links', []);
+            const linkData = currentLinks[indexToEdit];
+
+            // Preenche o formulário com os dados do link
+            document.getElementById('edit-link-index').value = indexToEdit;
+            document.getElementById('link-text').value = linkData.text;
+            document.getElementById('link-url').value = linkData.url;
+            document.getElementById('link-icon').value = linkData.icon || '';
+            document.getElementById('link-section').value = linkData.section || '';
+            document.getElementById('link-expiration').value = linkData.expiration || '';
+
+            // Limpa e preenche os checkboxes de dias da semana
+            document.querySelectorAll('.day-options input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            if (linkData.scheduledDays) {
+                linkData.scheduledDays.forEach(dayIndex => {
+                    const checkbox = document.getElementById(`day-${dayIndex}`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+
+            // Altera a interface para o modo de edição
+            document.getElementById('submit-link-btn').textContent = 'Salvar Alterações';
+            document.getElementById('cancel-edit-btn').style.display = 'block';
+
+            // Rola a página para o topo para que o usuário veja o formulário preenchido
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
+
+    // Botão para cancelar a edição
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    cancelEditBtn.addEventListener('click', resetFormState);
+
+    // Função para resetar o formulário e o estado de edição
+    function resetFormState() {
+        document.getElementById('add-link-form').reset();
+        document.getElementById('edit-link-index').value = '';
+        document.getElementById('submit-link-btn').textContent = 'Adicionar Link';
+        cancelEditBtn.style.display = 'none';
+    }
+
+    // Garante que o botão de cancelar esteja escondido no carregamento inicial
+    resetFormState();
 
     // Inicializa a funcionalidade de 'arrastar e soltar' na lista de links
     new Sortable(linksListContainer, {
@@ -319,6 +472,21 @@ function initAdminPage() {
             saveToStorage('section_order', newOrder);
         }
     });
+
+    // --- Lógica da Zona de Perigo ---
+    const resetBtn = document.getElementById('reset-all-data-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            const confirmation = prompt('Esta ação apagará TUDO (links, seções, aparência). Para confirmar, digite "redefinir":');
+            if (confirmation && confirmation.toLowerCase() === 'redefinir') {
+                localStorage.clear();
+                alert('Todos os dados foram apagados. A página será recarregada.');
+                window.location.reload();
+            } else {
+                alert('Ação cancelada.');
+            }
+        });
+    }
 }
 
 function renderAdminLinkList() {
@@ -369,7 +537,10 @@ function renderAdminLinkList() {
                 ${expirationHtml} ${scheduleHtml}
                 <span class="click-counter" title="Total de cliques"><i class="fas fa-mouse-pointer"></i> ${clickCount}</span>
             </span>
-            <button class="delete-btn" data-index="${index}">Remover</button>
+            <div class="admin-link-actions">
+                <button class="edit-btn" data-index="${index}">Editar</button>
+                <button class="delete-btn" data-index="${index}">Remover</button>
+            </div>
         `;
         listContainer.appendChild(linkEl);
     });
