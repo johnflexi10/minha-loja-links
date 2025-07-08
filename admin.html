@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Nunito:wght@400;700&family=Poppins:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -91,6 +91,7 @@
                             <div>
                                 <label for="bg-color2">Cor do Fundo (fim do gradiente):</label>
                                 <input type="color" id="bg-color2" value="#c3cfe2">
+                                <p class="admin-hint full-width" style="margin-top: 10px; text-align: left;">Dica: O gradiente só é visível quando não há uma imagem de fundo selecionada.</p>
                             </div>
                             <div>
                                 <label for="button-color">Cor dos Botões:</label>
@@ -102,7 +103,17 @@
                                     <option value="'Poppins', sans-serif">Poppins</option>
                                     <option value="'Roboto', sans-serif">Roboto</option>
                                     <option value="'Montserrat', sans-serif">Montserrat</option>
+                                    <option value="'Nunito', sans-serif">Nunito</option>
                                 </select>
+                            </div>
+                            <div class="full-width">
+                                <label for="card-opacity">Opacidade do Cartão (deixa o fundo mais visível):</label>
+                                <input type="range" id="card-opacity" min="0.1" max="1" step="0.05" value="0.95" style="width: 100%; margin-top: 5px;">
+                            </div>
+                            <div class="full-width">
+                                <label for="backdrop-blur">Nitidez do Fundo (Vidro Fosco):</label>
+                                <input type="range" id="backdrop-blur" min="0" max="20" step="1" value="5" style="width: 100%; margin-top: 5px;">
+                                <p class="admin-hint" style="text-align: left; margin-top: 5px;">Use 0px para um fundo totalmente nítido.</p>
                             </div>
                         </div>
                         <button type="submit">Salvar Aparência</button>
@@ -114,11 +125,11 @@
                 <!-- Seção de Gerenciamento de Seções -->
                 <section class="admin-section">
                     <h2>Gerenciar Seções</h2>
-                    <p class="admin-hint">Adicione uma descrição opcional para cada seção. Elas aparecerão abaixo do título na página principal.</p>
+                    <p class="admin-hint">Defina uma cor e descrição para cada seção. Arraste para reordenar.</p>
                     <div id="section-editor-list">
                         <!-- O editor de seções será inserido aqui pelo JavaScript -->
                     </div>
-                    <button id="save-sections-btn" class="save-descriptions-btn">Salvar Descrições</button>
+                    <button id="save-sections-btn" class="save-descriptions-btn">Salvar Seções</button>
                 </section>
 
                 <!-- Seção de Compartilhamento -->

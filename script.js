@@ -1,4 +1,7 @@
-// CONFIGURAÇÃO
+// =================================================================
+// ATENÇÃO: CONFIGURAÇÃO DE SEGURANÇA
+// A senha abaixo fica visível para qualquer pessoa que acessar o site.
+// Este sistema é ideal para uso pessoal/local. NÃO use em um ambiente público e compartilhado sem entender os riscos.
 const ADMIN_PASSWORD = "joao99"; // <-- MUDE SUA SENHA AQUI!
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -71,23 +74,18 @@ function initPublicPage() {
 function renderPublicLinks() {
     let links = getFromStorage('links', []); // Usar 'let' para permitir a filtragem
 
-    // Filtra os links com base na data de validade e no dia da semana
-    const now = new Date();
-    links = links.filter(link => {
-        if (!link.expiration) {
-            return true; // Se não tem data de validade, sempre mostra.
-        }
-        // A data de validade deve ser inclusiva. O link é válido durante todo o dia.
-        // Criamos um objeto de data para o final do dia de expiração.
-        const expirationDay = new Date(link.expiration);
-        expirationDay.setHours(23, 59, 59, 999); // Fim do dia
+    // --- FILTRAGEM DE LINKS ---
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normaliza para o início do dia para comparações
+    const todayStr = today.toISOString().split('T')[0]; // Formato 'YYYY-MM-DD' para comparação segura
+    const currentDay = today.getDay(); // 0 = Domingo, 1 = Segunda, etc.
 
-        return now <= expirationDay; // Mostra o link se a data atual for anterior ou igual ao fim do dia de expiração.
-    });
-
-    // Filtra com base no dia da semana
-    const currentDay = now.getDay(); // 0 = Domingo, 1 = Segunda, etc.
     links = links.filter(link => {
+        // 1. Verifica a data de validade (se houver)
+        const isDateValid = !link.expiration || link.expiration >= todayStr;
+        if (!isDateValid) return false;
+
+        // 2. Verifica o agendamento por dia da semana (se houver)
         // Se não há dias agendados, o link aparece todos os dias.
         if (!link.scheduledDays || link.scheduledDays.length === 0) {
             return true;
@@ -132,21 +130,26 @@ function renderPublicLinks() {
     // 3. Renderiza cada seção na ordem correta
     sectionOrder.forEach(sectionName => {
         const sectionLinks = sections[sectionName];
-        const description = sectionDetails[sectionName] || ''; // Pega a descrição para a seção atual
+        const details = sectionDetails[sectionName] || {}; // Pega os detalhes (descrição e cor)
+        const description = details.description || ''; // Pega a descrição para a seção atual
         const descriptionHtml = description ? `<p class="section-description">${description}</p>` : ''; // Cria o HTML da descrição, se existir
 
         let sectionHtml = `<section class="link-section"><h2>${sectionName}</h2>${descriptionHtml}`;
         
         sectionLinks.forEach((link, animationIndex) => {
+            const animationDelay = animationIndex * 0.1;
+            let buttonStyle = `animation-delay: ${animationDelay}s;`;
+            // Se a seção tiver uma cor customizada, aplica como uma variável CSS inline.
+            // Isso garante que os efeitos de hover (bolhas) também usem a nova cor.
+            if (details.color) {
+                buttonStyle += ` --button-bg-color: ${details.color};`;
+            }
             // Prioriza o ícone manual, senão tenta detectar um ícone automático pela URL
             const finalIconClass = link.icon || getIconForUrl(link.url);
             const iconHtml = finalIconClass ? `<i class="${finalIconClass}"></i>` : '';
 
-            // O atraso da animação é baseado na posição dentro da seção
-            const animationDelay = animationIndex * 0.1;
-
             // O data-index agora aponta para o índice original no array de links
-            sectionHtml += `<a href="${link.url}" data-index="${link.originalIndex}" target="_blank" class="link-button" style="animation-delay: ${animationDelay}s;">${iconHtml} ${link.text}</a>`;
+            sectionHtml += `<a href="${link.url}" data-index="${link.originalIndex}" target="_blank" class="link-button" style="${buttonStyle}">${iconHtml} ${link.text}</a>`;
         });
 
         sectionHtml += '</section>';
@@ -208,6 +211,9 @@ function renderSocialLinks() {
 // PÁGINA DE ADMIN (admin.html)
 // =================================================================
 function initAdminPage() {
+    // Constante para o limite de tamanho da imagem em Megabytes
+    const MAX_IMAGE_SIZE_MB = 2;
+
     // **MIGRAÇÃO AUTOMÁTICA**: Converte links antigos para o novo sistema de seções
     migrateOldLinks();
 
@@ -265,6 +271,8 @@ function initAdminPage() {
     document.getElementById('bg-color2').value = currentTheme.bgColor2 || '#c3cfe2';
     document.getElementById('button-color').value = currentTheme.buttonColor || '#ff6600';
     document.getElementById('font-family').value = currentTheme.fontFamily || "'Poppins', sans-serif";
+    document.getElementById('card-opacity').value = currentTheme.cardOpacity || '0.95';
+    document.getElementById('backdrop-blur').value = currentTheme.backdropBlur || '5';
 
     themeForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -279,6 +287,8 @@ function initAdminPage() {
         theme.bgColor2 = document.getElementById('bg-color2').value;
         theme.buttonColor = document.getElementById('button-color').value;
         theme.fontFamily = document.getElementById('font-family').value;
+        theme.cardOpacity = document.getElementById('card-opacity').value;
+        theme.backdropBlur = document.getElementById('backdrop-blur').value;
 
         saveToStorage('theme', theme);
         loadTheme(); // Aplica o tema imediatamente
@@ -288,16 +298,27 @@ function initAdminPage() {
     // Evento para salvar descrições das seções
     document.getElementById('save-sections-btn').addEventListener('click', () => {
         const sectionDetails = {};
+        // Pega a cor padrão do tema para não salvá-la desnecessariamente
+        const defaultButtonColor = getFromStorage('theme', {}).buttonColor || '#ff6600';
+
         document.querySelectorAll('.section-editor-item').forEach(item => {
             const sectionName = item.dataset.sectionName;
-            const descriptionInput = item.querySelector('input');
+            const descriptionInput = item.querySelector('input[type="text"]');
+            const colorInput = item.querySelector('input[type="color"]');
+
             const description = descriptionInput.value.trim();
-            if (description) {
-                sectionDetails[sectionName] = description;
+            const color = colorInput.value;
+
+            // Só salva a cor se for diferente da padrão do tema, para manter o JSON limpo
+            const finalColor = (color !== defaultButtonColor) ? color : null;
+
+            // Cria um registro para a seção apenas se houver uma descrição ou cor personalizada
+            if (description || finalColor) {
+                sectionDetails[sectionName] = { description: description || null, color: finalColor };
             }
         });
         saveToStorage('section_details', sectionDetails);
-        alert('Descrições das seções salvas com sucesso!');
+        alert('Configurações das seções salvas com sucesso!');
     });
 
     // --- Lógica do Formulário de Redes Sociais ---
@@ -328,6 +349,22 @@ function initAdminPage() {
     // Função auxiliar para lidar com upload de arquivos
     function handleImageUpload(file, themeKey) {
         if (!file) return;
+
+        // VERIFICAÇÃO DE TAMANHO DA IMAGEM
+        const fileSizeInMB = file.size / 1024 / 1024;
+        if (fileSizeInMB > MAX_IMAGE_SIZE_MB) {
+            alert(`Erro: A imagem é muito grande (${fileSizeInMB.toFixed(2)}MB). O limite é de ${MAX_IMAGE_SIZE_MB}MB.`);
+            
+            // Limpa o input para que o usuário possa tentar novamente com outro arquivo
+            if (themeKey === 'profilePic') {
+                document.getElementById('profile-pic-input').value = '';
+            } else if (themeKey === 'bgImageDataUrl') {
+                document.getElementById('bg-image-input').value = '';
+            }
+            return; // Interrompe a função
+        }
+
+        // Continua com o processamento se o tamanho for válido
         const reader = new FileReader();
         reader.onload = () => {
             const theme = getFromStorage('theme', {});
@@ -509,14 +546,14 @@ function renderAdminLinkList() {
         
         let expirationHtml = '';
         if (link.expiration) {
-            const expirationDate = new Date(link.expiration);
             const today = new Date();
             today.setHours(0, 0, 0, 0); // Compara com o início do dia de hoje
-            const isExpired = expirationDate < today;
+            const todayStr = today.toISOString().split('T')[0];
+            const isExpired = link.expiration < todayStr;
 
-            // Ajusta a data para exibição correta independente do fuso horário
-            const displayDate = new Date(expirationDate.getTime() + expirationDate.getTimezoneOffset() * 60000);
-
+            // Para exibição, cria a data no fuso horário local para evitar erros de um dia
+            const [year, month, day] = link.expiration.split('-').map(Number);
+            const displayDate = new Date(year, month - 1, day);
             expirationHtml = `<span class="expiration-date ${isExpired ? 'expired' : ''}" title="Expira em ${displayDate.toLocaleDateString('pt-BR')}"><i class="fas fa-calendar-times"></i> ${displayDate.toLocaleDateString('pt-BR')}</span>`;
         }
 
@@ -554,6 +591,10 @@ function renderSectionEditor() {
     const saveBtn = document.getElementById('save-sections-btn');
     editorContainer.innerHTML = '';
 
+    // Pega a cor padrão do tema para usar como fallback no seletor de cores
+    const theme = getFromStorage('theme', {});
+    const defaultButtonColor = theme.buttonColor || '#ff6600';
+
     // Pega nomes de seção únicos a partir dos links
     const sectionNames = [...new Set(links.map(link => link.section || 'Categorias'))];
 
@@ -573,15 +614,23 @@ function renderSectionEditor() {
 
     saveBtn.style.display = 'block'; // Mostra o botão se houver seções
     sectionOrder.forEach(name => {
-        const description = sectionDetails[name] || '';
+        const details = sectionDetails[name] || {};
+        const description = details.description || '';
+        // Usa a cor salva para a seção, ou a cor padrão do tema se não houver cor salva
+        const color = details.color || defaultButtonColor;
+
         const editorItem = document.createElement('div');
         editorItem.className = 'section-editor-item';
         editorItem.dataset.sectionName = name;
+        const safeId = name.replace(/[^a-zA-Z0-9]/g, ''); // Cria um ID seguro para o input
         editorItem.innerHTML = `
             <i class="fas fa-grip-vertical drag-handle" title="Arraste para reordenar"></i>
             <div class="section-editor-content">
-                <label for="desc-${name.replace(/\s/g, '')}">${name}</label>
-                <input type="text" id="desc-${name.replace(/\s/g, '')}" value="${description}" placeholder="Descrição para a seção (opcional)">
+                <label for="desc-${safeId}">${name}</label>
+                <div class="section-editor-inputs">
+                    <input type="text" id="desc-${safeId}" value="${description}" placeholder="Descrição (opcional)">
+                    <input type="color" id="color-${safeId}" value="${color}" title="Cor dos botões para a seção '${name}'">
+                </div>
             </div>
         `;
         editorContainer.appendChild(editorItem);
@@ -659,7 +708,9 @@ function loadTheme() {
         bgColor1: '#f5f7fa',
         bgColor2: '#c3cfe2',
         buttonColor: '#ff6600',
-        fontFamily: "'Poppins', sans-serif"
+        fontFamily: "'Poppins', sans-serif",
+        cardOpacity: '0.95', // Valor padrão para opacidade
+        backdropBlur: '5'    // Valor padrão para o blur em pixels
     });
 
     const root = document.documentElement;
@@ -719,6 +770,10 @@ function loadTheme() {
     root.style.setProperty('--font-family', theme.fontFamily);
     // A cor da borda da foto de perfil pode ser a mesma do botão para manter a consistência
     root.style.setProperty('--profile-border-color', theme.buttonColor);
+
+    // Aplica os novos controles de opacidade e nitidez
+    root.style.setProperty('--card-opacity', theme.cardOpacity || '0.95');
+    root.style.setProperty('--backdrop-blur', `${theme.backdropBlur || 5}px`);
 }
 
 function getFromStorage(key, defaultValue) {
